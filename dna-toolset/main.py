@@ -10,7 +10,7 @@ randDNAstr = ''.join([random.choice(Nucleotides)
 
 DNAStr = validateSeq(randDNAstr)
 
-print(f'\nSequence: {colored(DNAStr)}\n')
+print(f'\nSequence: {DNAStr}\n')
 print(f'Sequence Length: {len(DNAStr)}\n')
 print(f'Nucleotide Frequency: {countNucFrequency(DNAStr)}')
 print(f'RNA Transcription: {transcription(DNAStr)}\n')
@@ -23,3 +23,9 @@ print(f"5' {reverse_complement(DNAStr)} 3' [Reverse Complement]\n")
 print(f'GC Content: {gc_content(DNAStr)}%\n')
 print(
     f'GC Content in Subsection k=5: {gc_content_subsec(DNAStr, k=5)}\n')
+
+print(
+    f'Amino acid Sequence from DNA: {translate_seq(DNAStr, 0)}\n')
+
+print(
+    f'Codon frequency (L): {codon_usage(DNAStr, "L")}\n')
