@@ -1,6 +1,7 @@
 #DNAToolset Testing 
 from DNAToolkit import *
 from utilities import colored
+from structures import *
 import random
 
 #Create random DNA sequence and sort
@@ -33,3 +34,11 @@ print(
 print('[9] > Reading frames:')
 for frame in gen_reading_frames(DNAStr):
     print(frame)
+
+print('\n[10] > All proteins in 6 open reading frames for Homo sapiens insulin (INS), transcript variant 1, mRNA (NM_000207.3):')
+for protein in all_proteins_from_orfs(NM_000207_3, 0, 0, True):
+    print(f'{protein}')
+
+print('\n[11] > All proteins in 6 open reading frames for Homo sapiens hemoglobin subunit beta (HBB), mRNA (NM_000518.5):')
+for protein in all_proteins_from_orfs(NM_000518_5 , 0, 0, True):
+    print(f'{protein}')
