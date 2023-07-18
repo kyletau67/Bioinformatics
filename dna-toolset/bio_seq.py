@@ -1,4 +1,5 @@
-from bio_structs import *
+from bio_structs import DNA_Codons, Nucleotides 
+from collections import Counter
 import random
 
 class bio_seq:
@@ -12,8 +13,8 @@ class bio_seq:
         self.is_valid = self.__validate()
         assert self.is_valid, f"Provided data does not seem to be a correct {self.seq_type} sequence"
 
-    #Check sequence to make sure it is a DNA String
     def __validate(self):
+        """Check sequence to make sure it is a DNA String"""
         return set(Nucleotides).issuperset(self.seq)    
     
     def get_seq_biotype(self):
@@ -29,3 +30,99 @@ class bio_seq:
         seq = ''.join([random.choice(Nucleotides)
                      for x in range(length)])
         self.__init__(seq, seq_type, "Randomly generated sequence")
+
+    def nucleotide_frequency(self):
+        """Count nucleotides in a given sequence. Return dictionary"""
+        return dict(Counter(self.seq))
+    
+    def transcription(self):
+        """transcribing RNA from DNA, replacing thymine with uracil"""
+        return self.seq.replace('T','U')
+    
+    def reverse_complement(self):
+        """swapping complement pairs in DNA, then reversing the string"""
+        mapping = str.maketrans('ATCG', 'TAGC')
+        return self.seq.translate(mapping)[::-1]
+    
+    def gc_content(self):
+        """GC Content in a DNA/RNA sequence"""
+        return round(
+            ((self.seq.count('C') + self.seq.count('G')) / len(self.seq) * 100),6)
+
+    def gc_content_subsec(self, k=20):
+        """GC Content in a DNA/RNA sub-sequence length k. k=20 by default"""
+        res = []
+        for i in range(0, len(self.seq) - k + 1, k):
+            subseq = self.seq[i:i+k]
+            res.append(round(
+                ((subseq.count('C') + subseq.count('G')) / len(subseq) * 100),6))
+        return res
+    
+    def translate_seq(self, init_pos=0):
+        """Translates DNA seq into amino acid seq"""
+        return [DNA_Codons[self.seq[pos:pos+3]] for pos in range(init_pos, len(self.seq) - 2, 3)]
+
+    def codon_usage(self, aminoacid):
+        """Provides frequency of each codon encoding a given amino acid in DNA seq"""
+        tmpList = []
+        for i in range(0, len(self.seq) - 2, 3):
+            if DNA_Codons[self.seq[i:i+3]] == aminoacid:
+                tmpList.append(self.seq[i:i+3])
+
+        freqDict = dict(Counter(tmpList))
+        totalWeight = sum(freqDict.values())
+        for seq in freqDict:
+            freqDict[seq] = round(freqDict[seq] / totalWeight, 2)
+        return freqDict
+   
+    def gen_reading_frames(self):
+        """Generate six reading frames of DNA seq, including reverse complement"""
+        frames = []
+        frames.append(self.translate_seq(0))
+        frames.append(self.translate_seq(1))
+        frames.append(self.translate_seq(2))
+        tmp_seq = bio_seq(self.reverse_complement(), self.seq_type)
+        frames.append(tmp_seq.translate_seq(0))
+        frames.append(tmp_seq.translate_seq(1))
+        frames.append(tmp_seq.translate_seq(2))  
+        del tmp_seq      
+        return frames
+    
+    def proteins_from_rf(self,aa_seq):
+        """Compute all possible proteins in an aminoacid seq and return a list of possible proteins"""
+        current_prot = []
+        proteins = []
+        for aa in aa_seq:
+            if aa == "_":
+                #stop codon detected - end of amino acid seq
+                if current_prot:
+                    for p in current_prot:
+                        proteins.append(p)
+                    current_prot = []
+            else:
+                #start accumulating amino acids if M is detected (start codon)
+                if aa == "M":
+                    current_prot.append("")
+                for i in range(len(current_prot)):
+                    current_prot[i] += aa
+        return proteins
+    
+    def all_proteins_from_orfs(self, startReadPos=0, endReadPos=0, ordered=False):
+        """Compute all possible proteins for all open reading frames"""
+        """Protein Search DB: https://wwww.ncbi.nlm.nih.gov/nuccore/NM_001185097.2"""
+        """API can be used to pull protein info"""
+        if endReadPos > startReadPos:
+            tmp_seq = bio_seq(self.seq[startRead: endRead], self.seq_type)
+            rfs = tmp_seq.gen_reading_frames()
+        else:
+            rfs = self.gen_reading_frames()
+
+        res = []
+        for rf in rfs:
+            proteins = self.proteins_from_rf(rf)
+            for p in proteins:
+                res.append(p)
+
+        if ordered:
+            return sorted(res, key = len, reverse = True)
+        return res
