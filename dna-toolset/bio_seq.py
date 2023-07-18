@@ -1,4 +1,4 @@
-from bio_structs import DNA_Codons, Nucleotides 
+from bio_structs import NUCLEOTIDE_BASE, DNA_Codons, RNA_Codons 
 from collections import Counter
 import random
 
@@ -15,7 +15,7 @@ class bio_seq:
 
     def __validate(self):
         """Check sequence to make sure it is a DNA String"""
-        return set(Nucleotides).issuperset(self.seq)    
+        return set(NUCLEOTIDE_BASE[self.seq_type]).issuperset(self.seq)    
     
     def get_seq_biotype(self):
         """Returns sequence type"""
@@ -27,7 +27,7 @@ class bio_seq:
     
     def generate_rnd_seq(self, length=10, seq_type="DNA"):
         """Generate random DNA seq, provided the length"""
-        seq = ''.join([random.choice(Nucleotides)
+        seq = ''.join([random.choice(NUCLEOTIDE_BASE[self.seq_type])
                      for x in range(length)])
         self.__init__(seq, seq_type, "Randomly generated sequence")
 
@@ -37,11 +37,16 @@ class bio_seq:
     
     def transcription(self):
         """transcribing RNA from DNA, replacing thymine with uracil"""
-        return self.seq.replace('T','U')
+        if self.seq_type == "DNA":
+            return self.seq.replace('T','U')
+        return "Not a DNA Sequence"
     
     def reverse_complement(self):
         """swapping complement pairs in DNA, then reversing the string"""
-        mapping = str.maketrans('ATCG', 'TAGC')
+        if self.seq_type == "DNA":
+            mapping = str.maketrans('ATCG', 'TAGC')
+        else:
+            mapping = str.maketrans('AUCG', 'UAGC')
         return self.seq.translate(mapping)[::-1]
     
     def gc_content(self):
@@ -60,15 +65,24 @@ class bio_seq:
     
     def translate_seq(self, init_pos=0):
         """Translates DNA seq into amino acid seq"""
-        return [DNA_Codons[self.seq[pos:pos+3]] for pos in range(init_pos, len(self.seq) - 2, 3)]
+        if self.seq_type == "DNA":
+            return [DNA_Codons[self.seq[pos:pos+3]] for pos in range(init_pos, len(self.seq) - 2, 3)]
+        elif self.seq_type == "RNA":
+            return [RNA_Codons[self.seq[pos:pos+3]] for pos in range(init_pos, len(self.seq) - 2, 3)]
 
     def codon_usage(self, aminoacid):
         """Provides frequency of each codon encoding a given amino acid in DNA seq"""
         tmpList = []
-        for i in range(0, len(self.seq) - 2, 3):
-            if DNA_Codons[self.seq[i:i+3]] == aminoacid:
-                tmpList.append(self.seq[i:i+3])
+        if self.seq_type == "DNA":
+            for i in range(0, len(self.seq) - 2, 3):
+                if DNA_Codons[self.seq[i:i+3]] == aminoacid:
+                    tmpList.append(self.seq[i:i+3])
 
+        if self.seq_type == "RNA":
+            for i in range(0, len(self.seq) - 2, 3):
+                if RNA_Codons[self.seq[i:i+3]] == aminoacid:
+                    tmpList.append(self.seq[i:i+3])
+                    
         freqDict = dict(Counter(tmpList))
         totalWeight = sum(freqDict.values())
         for seq in freqDict:
