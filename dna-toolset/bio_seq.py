@@ -27,7 +27,7 @@ class bio_seq:
     
     def generate_rnd_seq(self, length=10, seq_type="DNA"):
         """Generate random DNA seq, provided the length"""
-        seq = ''.join([random.choice(NUCLEOTIDE_BASE[self.seq_type])
+        seq = ''.join([random.choice(NUCLEOTIDE_BASE[seq_type])
                      for x in range(length)])
         self.__init__(seq, seq_type, "Randomly generated sequence")
 
